@@ -1,6 +1,6 @@
 # Mongobackup - S3
 
-By using the image niklasekstrom/mongo-backup your container will automatically connect to a secondary mongo replica member to do a full mongodump of the database. Then the dump will get archived and uploaded to S3 and then the /dump folder and archive will be removed.
+By using this image your container will automatically connect to a secondary mongo replica member to do a full mongodump of the database. Then the dump will get archived and uploaded to S3 and then the /dump folder and archive will be removed.
 
 A few environmental variables need to be defined for the script to work and a service link needs to be setup to connect the two containers. If no Backup schedule is set up using cron the backup needs to be run manually by starting the container since it shuts down after the backup is complete.
 
