@@ -3,33 +3,41 @@ MONGO_PORT="27017"
 
 #Restore function, downloads the selected file from S3Bucket, unzips, restores and clean up files.
 function getIp {
+#This needs to be scaled up if there are more than 3 hosts, it does not really matter becuse there is never mora than 1 primary.
+#However the restore script could need a array here instead.
   read -a IP <<<$(dig mongo | grep mongo. | awk '{print $5}' | tail -n 3 | xargs )
-  echo "Found mongodb hosts: ${IP[*]}"
-}
+  MONGO_HOST1=${IP[0]}
+  MONGO_HOST2=${IP[1]}
+  MONGO_HOST3=${IP[2]}
+echo "The found mongodb hosts are $MONGO_HOST1, $MONGO_HOST2, $MONGO_HOST3."
 
-function checkHostSlave {
-  for CANDIDATE in ${IP[*]}
-  do
-    IS_MASTER=$(mongo --host $CANDIDATE --eval "printjson(db.isMaster())" | grep 'ismaster')
-    if [[ $IS_MASTER == *"false"* ]]; then
-     MONGO_HOST=$CANDIDATE
-     echo "$MONGO_HOST detected as slave"
-    fi
-  done
+}
+function checkHostPrimary {
+  IS_MASTER=$(mongo --host $MONGO_HOST1 --eval "printjson(db.isMaster())" | grep 'ismaster')
+  if echo $IS_MASTER | grep "false"; then
+  MONGO_HOST=$MONGO_HOST1
+  echo "$MONGO_HOST detected as slave"
+fi
+  IS_MASTER=$(mongo --host $MONGO_HOST2 --eval "printjson(db.isMaster())" | grep 'ismaster')
+  if echo $IS_MASTER | grep "false"; then
+  MONGO_HOST=$MONGO_HOST2
+ echo "$MONGO_HOST detected as slave"
+fi
+  IS_MASTER=$(mongo --host $MONGO_HOST3 --eval "printjson(db.isMaster())" | grep 'ismaster')
+  if echo $IS_MASTER | grep "tfalse"; then
+  MONGO_HOST=$MONGO_HOST3
+ echo "$MONGO_HOST detected as slave"
+fi
 }
 getIp
-checkHostSlave
+checkHostPrimary
 
-echo 
 
 echo "Starting backup..."
-
 DATE=$(date +$DATEFORMAT)
-FILENAME=$FILEPREFIX$DATE.tar.gz
+FILENAME=$FILEPREFIX$DATE.bak
 FILE=/backup/backup-$FILENAME
-
-mongodump --quiet -h $MONGO_HOST -p $MONGO_PORT $DB_ARG
-tar -zcvf $FILE dump/
+mongodump --gzip --quiet -h $MONGO_HOST -p $MONGO_PORT $DB_ARG archive=$FILE
 aws s3api put-object --bucket $S3BUCKET --key $FILENAME --body $FILE
 echo "Cleaning up..."
-rm -rf dump/$FILE
+rm -rf /backup/*.bak
