@@ -37,7 +37,7 @@ echo "Starting backup..."
 DATE=$(date +$DATEFORMAT)
 FILENAME=$FILEPREFIX$DATE.bak
 FILE=/backup/backup-$FILENAME
-mongodump --gzip --quiet -h $MONGO_HOST -p $MONGO_PORT $DB_ARG archive=$FILE
+mongodump --gzip --quiet -h $MONGO_HOST -p $MONGO_PORT $DB_ARG --archive=$FILE
 aws s3api put-object --bucket $S3BUCKET --key $FILENAME --body $FILE
 echo "Cleaning up..."
 rm -rf /backup/*.bak
