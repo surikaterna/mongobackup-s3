@@ -24,7 +24,7 @@ fi
  echo "$MONGO_HOST detected as slave"
 fi
   IS_MASTER=$(mongo --host $MONGO_HOST3 --eval "printjson(db.isMaster())" | grep 'ismaster')
-  if echo $IS_MASTER | grep "tfalse"; then
+  if echo $IS_MASTER | grep "false"; then
   MONGO_HOST=$MONGO_HOST3
  echo "$MONGO_HOST detected as slave"
 fi
@@ -38,6 +38,6 @@ DATE=$(date +$DATEFORMAT)
 FILENAME=$FILEPREFIX$DATE.bak
 FILE=/backup/backup-$FILENAME
 mongodump --gzip --quiet -h $MONGO_HOST -p $MONGO_PORT $DB_ARG --archive=$FILE
-aws s3api put-object --bucket $S3BUCKET --key $FILENAME --body $FILE
+s3cmd --access_key=$AWS_ACCESS_KEY_ID --secret_key=$AWS_SECRET_ACCESS_KEY put $FILE S3://surikatbackups/$FILENAME
 echo "Cleaning up..."
 rm -rf /backup/*.bak
