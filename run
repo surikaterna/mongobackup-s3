@@ -32,12 +32,18 @@ fi
 getIp
 checkHostPrimary
 
+echo "Space available"
+df -h
+
+echo "This image assumes a directory available at /storage with enough space for the complete database"
+cd /storage
+mkdir -p backup
 
 echo "Starting backup..."
 DATE=$(date +$DATEFORMAT)
 FILENAME=$FILEPREFIX$DATE.bak
-FILE=/backup/backup-$FILENAME
+FILE=/storage/backup/backup-$FILENAME
 mongodump --gzip --quiet -h $MONGO_HOST -p $MONGO_PORT $DB_ARG --archive=$FILE
 s3cmd --access_key=$AWS_ACCESS_KEY_ID --secret_key=$AWS_SECRET_ACCESS_KEY put $FILE S3://surikatbackups/$FILENAME
 echo "Cleaning up..."
-rm -rf /backup/*.bak
+rm -rf /storage/backup/*.bak
