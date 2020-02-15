@@ -44,6 +44,6 @@ DATE=$(date +$DATEFORMAT)
 FILENAME=$FILEPREFIX$DATE.bak
 FILE=/storage/backup/backup-$FILENAME
 mongodump --gzip --quiet -h $MONGO_HOST -p $MONGO_PORT $DB_ARG --archive=$FILE
-s3cmd --access_key=$AWS_ACCESS_KEY_ID --secret_key=$AWS_SECRET_ACCESS_KEY put $FILE S3://surikatbackups/$FILENAME
+s3cmd --access_key=$AWS_ACCESS_KEY_ID --secret_key=$AWS_SECRET_ACCESS_KEY --multipart-chunk-size-mb=1500 put $FILE S3://surikatbackups/$FILENAME
 echo "Cleaning up..."
 rm -rf /storage/backup/*.bak
